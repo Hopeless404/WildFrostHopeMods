@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33717.318
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WildFrostHopeMods", "WildFrostHopeMods.csproj", "{DB19D59D-226F-48F5-ABD4-00CDB80E3A80}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB19D59D-226F-48F5-ABD4-00CDB80E3A80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB19D59D-226F-48F5-ABD4-00CDB80E3A80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB19D59D-226F-48F5-ABD4-00CDB80E3A80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB19D59D-226F-48F5-ABD4-00CDB80E3A80}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8EE9E43E-DF35-4627-86D7-77A4C2F41F82}
+	EndGlobalSection
+EndGlobal
