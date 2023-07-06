@@ -19,18 +19,17 @@ using UnityEngine.Localization.Tables;
 using UnityEngine.Localization;
 using FMOD;
 using Newtonsoft.Json.Utilities;
+using Rewired.Utils;
 
 namespace WildFrostHopeMods;
 
-[BepInPlugin("WildFrost.Hope.GeneralModifiers", "General Modifiers", "0.1.0.0")]
+[BepInPlugin("WildFrost.Hope.GeneralModifiers", "General Modifiers", "0.1.1.0")]
 public class GeneralModifier : BasePlugin
 {
-    internal static Dictionary<string, List<StatusEffectData>> GroupAdditions = new Dictionary<string, List<StatusEffectData>>();
-
     internal static GeneralModifier Instance;
     internal static GeneralModifier im = new GeneralModifier();
 
-
+    //MiscTools.Clone(obj);
     
 
 
@@ -52,7 +51,7 @@ public class GeneralModifier : BasePlugin
             //this.StartCoroutine(KnightSummoner());    // Example of NextPhase statuseffects (not working/clean yet)
             this.StartCoroutine(Stinkbug());          // Example of While Active effects (not working with FrontEnemy flag)
             this.StartCoroutine(CorpseEater());       // Example of "moving" a card from hand to board
-            this.StartCoroutine(Tarblade());          // Example of custom charms
+            //this.StartCoroutine(Tarblade());          // Example of custom charms
             //this.StartCoroutine(Hellfire());    // 
                                                 // need to figure out how to apply when it has injured trait
             this.StartCoroutine(Witch());     // Example of using Actions to change effect stacks (current X)
@@ -599,7 +598,7 @@ public class GeneralModifier : BasePlugin
                 .SetText("While in hand, summon <card=Hope.Corpse Eater> when an alive ally dies");
 
             summonCorpseEater.summonCard = c;
-            se.AddApplyConstraint(Extensions.CreateTargetConstraint<TargetConstraintIsSpecificCard>(
+            se = se.AddApplyConstraint(Extensions.CreateTargetConstraint<TargetConstraintIsSpecificCard>(
                     not: true, allowedCards: new CardData[] { c }))
                 .AddApplyConstraint(Extensions.CreateTargetConstraint<TargetConstraintIsCardType>(
                     not: true, allowedTypes: new CardType[] { Extensions.CardTypeLookup("Clunker") }));
@@ -739,8 +738,8 @@ public class GeneralModifier : BasePlugin
             chime = chime.SetStartWithEffects(WhenChimeTrigger.StatusEffectStack(1))
                 .RegisterInGroup().AddWhenHitPlayRingSFX();
 
-            bellist.AddPreTurnAction(entity => 
-                entity.statusEffects.Find(se => se.name == conditionalSummon.name).count = (Battle.GetCardsOnBoard(Battle.instance.player).Find(entity => entity.name == chime.name) != null) ? 0 : 1
+            bellist.AddOnHitPreAction(entity => 
+                entity.statusEffects.Find(se => se.data.name == conditionalSummon.name).count = (Battle.GetCardsOnBoard(Battle.instance.player).Find(entity => entity.name == chime.name) != null) ? 0 : 1
             );
 
             #region beller charm
@@ -750,7 +749,7 @@ public class GeneralModifier : BasePlugin
                 .SetTitle("Bell charm")
                 .SetUpgradeType(CardUpgradeData.Type.Charm)
                 .SetImage("CardPortraits\\TarCharm")
-                .AddTargetConstraint(Extensions.CreateTargetConstraint<TargetConstraintAttackMoreThan>(value: 0))
+                .AddTargetConstraint(Extensions.CreateTargetConstraint<TargetConstraintDoesAttack>())
                 .AddScript(Extensions.CreateCardScript<CardScriptAddTrait>(
                     trait: traitBellist, range: new Vector2Int(1,1)
                 ))
@@ -962,13 +961,14 @@ public class GeneralModifier : BasePlugin
 
     public static IEnumerator General()
     {
-        yield return new WaitUntil((Func<bool>)(() =>
+       yield return new WaitUntil((Func<bool>)(() =>
             AddressableLoader.IsGroupLoaded("GameModifierData")    
         ));
         string[] layers = System.Linq.Enumerable.Range(0, 31).Select(index => LayerMask.LayerToName(index)).Where(l => !string.IsNullOrEmpty(l)).ToArray();
         foreach (var i in layers)
             im.Print(i);
 
+        
 
         var template = AddressableLoader.groups["BattleData"].lookup["Snowbos"].Cast<BattleData>();
 

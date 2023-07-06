@@ -8,12 +8,14 @@
 
     <ItemGroup>
       <Compile Remove="Modifier.cs" />
+      <Compile Remove="NewTribe1.cs" />
       <Compile Remove="SnapshotCamera.cs" />
       <Compile Remove="Unlocker.cs" />
     </ItemGroup>
 
     <ItemGroup>
       <None Include="Modifier.cs" />
+      <None Include="NewTribe1.cs" />
       <None Include="SnapshotCamera.cs" />
       <None Include="Unlocker.cs">
         <CopyToOutputDirectory>Never</CopyToOutputDirectory>

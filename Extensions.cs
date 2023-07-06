@@ -11,6 +11,7 @@ using UnityEngine.UIElements;
 using WildfrostModMiya;
 using System.Reflection;
 using Il2CppSystem.Data;
+using Rewired.Utils;
 
 namespace WildFrostHopeMods;
 
@@ -77,6 +78,12 @@ public static class Extensions
         t.createScripts = new Il2CppReferenceArray<CardScript>(t.createScripts.AddItem(cs).ToArray());
         return t;
     }
+    public static CardData AddCreateScripts(this CardData t, CardScript[] css)
+    {
+        foreach (var cs in css)
+            t.AddCreateScript(cs);
+        return t;
+    }
 
     public static T CreateCardScript<T>(string modName = "API", string cardName = "CardScript", StatusEffectData effect = null, TraitData trait = null, Vector2Int range = default(Vector2Int), float multiply = 1f) where T : CardScript
     {
@@ -131,9 +138,8 @@ public static class Extensions
     }
     public static CardData CardDataLookup(string name)
     {
-        return (AddressableLoader.groups["CardData"].lookup[name] 
-            ?? AddressableLoader.groups["CardData"].lookup[RefNames[name]])
-            .Cast<CardData>();
+        if (AddressableLoader.groups["CardData"].lookup.ContainsKey(name)) return AddressableLoader.groups["CardData"].lookup[name].Cast<CardData>();
+        else return AddressableLoader.groups["CardData"].lookup[Tables.Cards[name]].Cast<CardData>();
     }
     public static CardData ToCardData(this string name)
     {
@@ -319,6 +325,20 @@ public static class Extensions
         );
         return c;
     }
+    public static CardData AddOnHitPreAction(this CardData c, Action<Hit> action, string? targetName = null, (int min, int max)? damageRange = null, string? damageType = null)
+    {
+        Patches.eventsOnHitPre.Add(new Func<Entity, Entity, int, string, Action<Hit>>((attacker, target, damage, _damageType) =>
+        {
+            if (target.name == (targetName ?? target.name)
+            && attacker.name == c.name
+            && (damageRange == null ? true : damage <= damageRange.Value.min && damage >= damageRange.Value.max)
+            && _damageType == (damageType ?? _damageType))
+                return action;
+            return (hit) => { };
+        })
+        );
+        return c;
+    }
 
     // not working yet
     public static AudioClip LoadAudioFromCardPortraits(string name, AudioType audioType = AudioType.WAV)
@@ -395,264 +415,6 @@ public static class Extensions
 
 
     }
-    public static Dictionary<string, string> RefNames = new Dictionary<string, string>() {
-        {"Baby Snowbo", "BabySnowbo"},
-        {"Bom Barrel", "Badoo"},
-        {"Scaven", "Bear"},
-        {"Beepop", "Beepop"},
-        {"Beepop Mask", "BeepopMask"},
-        {"Plum", "Berro"},
-        {"Berry Basket", "BerryBasket"},
-        {"Berry Blade", "BerryBlade"},
-        {"Earth Berry", "BerryMonster"},
-        {"Booshu", "BerryPet"},
-        {"Berry Witch", "BerryWitch"},
-        {"Big Berry", "BigBerry"},
-        {"Big Peng", "BigPeng"},
-        {"Bitebox", "Bitebox"},
-        {"Blaze Tea", "BlazeTea"},
-        {"Bling Bank", "Blingo"},
-        {"Supersnower", "BlizzPop"},
-        {"Krab", "Blockhead"},
-        {"Berry Sis", "BloodBoy"},
-        {"Blunky", "Blunky"},
-        {"Van Jun", "BoBo"},
-        {"Groff", "Boggler"},
-        {"Bolgo", "Bolgo"},
-        {"Azul Battle Axe", "BoltHarpoon"},
-        {"Bombom", "Bombom"},
-        {"Portable Workbench", "Bonfire"},
-        {"Bonnie", "Bonnie"},
-        {"Lil' Gazi", "BoostPet"},
-        {"Broken Vase", "BrokenVase"},
-        {"Bulbhead", "BulbHead"},
-        {"Blaze Bom", "Bumblebee"},
-        {"Bumbo", "Bumbo"},
-        {"Kreggo", "Bunnight"},
-        {"Willow", "Burner"},
-        {"Burster", "Burster"},
-        {"Chompom", "Chompom"},
-        {"Chungoon", "Chungoon"},
-        {"Grumps", "Chunky"},
-        {"Krunker", "ClunkerBoss"},
-        {"Krunker", "ClunkerBoss2"},
-        {"Smog", "Confuddler"},
-        {"Conker", "Conker"},
-        {"Razor", "CrazyEyes"},
-        {"Proto-Stomper", "Crowbar"},
-        {"Tar Blade", "Dart"},
-        {"Demonheart", "Demonheart"},
-        {"Loki", "DemonPet"},
-        {"Dimona", "Dimona"},
-        {"Splinter", "Ditto"},
-        {"Blank Mask", "Dittostone"},
-        {"Dragon Pepper", "DragonflamePepper"},
-        {"Sneezle", "DrawPet"},
-        {"Dregg", "Dregg"},
-        {"Egg", "Egg"},
-        {"Shade Wisp", "EnemyCloner"},
-        {"Clockwork Bom", "EnergyDart"},
-        {"Magma Booster", "EyeDrops"},
-        {"Fallow", "Fallow"},
-        {"Fallow Mask", "FallowMask"},
-        {"Frost Guardian", "FinalBoss"},
-        {"Frost Guardian", "FinalBoss2"},
-        {"Firefist", "Firefist"},
-        {"Flamewater", "FlameWater"},
-        {"Vesta", "Flash"},
-        {"Azul Candle", "FlashWhip"},
-        {"Foggy Brew", "FoggyBrew"},
-        {"Foxee", "Foxee"},
-        {"Infernoko", "FrenzyBoss"},
-        {"Infernoko", "FrenzyBoss2"},
-        {"Frenzy Wrench", "FrenzyShard"},
-        {"Frost Bell", "FrostBell"},
-        {"Frostbloom", "FrostBloom"},
-        {"Frostinger", "Frostinger"},
-        {"The Ringer", "Frosty"},
-        {"Fungun", "Fungoose"},
-        {"Gearhammer", "Gearhammer"},
-        {"Folby", "Gearhead"},
-        {"Fizzle", "Gnomlings"},
-        {"Gobling", "Gobling"},
-        {"Gok", "Gok"},
-        {"Grink", "Grink"},
-        {"Grog", "Grog"},
-        {"Grouchy", "Grouchy"},
-        {"Nom & Stompy", "GuardianGnome"},
-        {"Muttonhead", "GukaGuka"},
-        {"Haze Keg", "HazeBlaze"},
-        {"Heartforge", "Heartforge"},
-        {"Heartmist Station", "HeartmistStation"},
-        {"Hongo's Hammer", "HongosHammer"},
-        {"Grabber", "Hooker"},
-        {"Ice Dice", "IceDice"},
-        {"Ice Forge", "IceForge"},
-        {"Krawler", "Icemason"},
-        {"Frostbite Shard", "IceShard"},
-        {"Jab Joat", "JabJoat"},
-        {"Spike", "Jagzag"},
-        {"Tootordion", "Joob"},
-        {"Gigi's Gizmo", "Juicepot"},
-        {"Tinkerson Jr.", "Jummo"},
-        {"Gigi's Cookie Box", "Junberry"},
-        {"Junjun Mask", "JunjunMask"},
-        {"Junk", "Junk"},
-        {"Junkhead", "Junkhead"},
-        {"Blundertank", "Junkmuncher"},
-        {"Kernel", "Kernel"},
-        {"Jumbo", "Klutz"},
-        {"Taiga", "Kokonut"},
-        {"Krono", "Krono"},
-        {"Leader", "Leader"},
-        {"Leech", "Leech"},
-        {"Leech Mask", "Leecher"},
-        {"Lil' Berry", "LilBerry"},
-        {"Lumin Goop", "LuminSealant"},
-        {"Lumin Lantern", "LuminShard"},
-        {"The Lumin Vase", "LuminVase"},
-        {"Sunglass Chime", "Madness"},
-        {"Makoko", "Makoko"},
-        {"Mega Mimik", "MegaMimik"},
-        {"Mimik", "Mimik"},
-        {"Ice Lantern", "MiniForge"},
-        {"Minimoko", "Minimoko"},
-        {"Mobile Campfire", "MobileCampfire"},
-        {"Molten Dip", "MoltenDip"},
-        {"Monch", "Monch"},
-        {"King Moko", "MonkeyKing"},
-        {"Moko Head", "MonkeyWorshipTotem"},
-        {"Bigloo", "Muttonhead"},
-        {"Naked Gnome", "NakedGnome"},
-        {"Naked Gnome", "NakedGnomeFriendly"},
-        {"Gromble", "Noodle"},
-        {"Noomlin Biscuit", "NoomlinBiscuit"},
-        {"B.I.N.K", "Nullifier"},
-        {"Numskull", "Numskull"},
-        {"Nutshell Cake", "NutshellCake"},
-        {"I.C.G.M", "OhNo"},
-        {"Ooba Bear", "OobaBear"},
-        {"Pecan", "Pecan"},
-        {"Pengoon", "Pengoon"},
-        {"Peppereaper", "Peppereaper"},
-        {"Pepper Flag", "PepperFlag"},
-        {"Peppering", "Peppering"},
-        {"Moko Totem", "Peppermaton"},
-        {"Pepper Witch", "PepperWitch"},
-        {"Pom", "Pigeon"},
-        {"Pom Mask", "PigeonCage"},
-        {"Pinkberry Juice", "PinkberryJuice"},
-        {"Junjun", "Plep"},
-        {"Plinker", "Plinker"},
-        {"Berry Bell", "Plum"},
-        {"Gachapomper", "PomDispenser"},
-        {"Pombomb", "PomegranateBomb"},
-        {"Pootie", "Pootie"},
-        {"Sheepopper", "Popper"},
-        {"Sheepopper Mask", "PopPopper"},
-        {"Popshroom", "Popshroom"},
-        {"Prickle", "Prickle"},
-        {"Puffball", "Puffball"},
-        {"Shade Clay", "Putty"},
-        {"Pygmy", "Pygmy"},
-        {"Pyra", "Pyra"},
-        {"Devicro", "Reaper"},
-        {"Forging Stove", "Recycler"},
-        {"Scrap Pile", "ScrapPile"},
-        {"Skullmist Tea", "Scythe"},
-        {"Tiger Skull", "SharkTooth"},
-        {"Shellbo", "Shellbo"},
-        {"Shell Shield", "ShellShield"},
-        {"Shell Witch", "ShellWitch"},
-        {"Shelly", "Shelly"},
-        {"Shroom Gobbler", "ShroomGobbler"},
-        {"Shroominator", "Shroominator"},
-        {"Shroomine", "Shroomine"},
-        {"Fungo Blaster", "ShroomLauncher"},
-        {"Shrootles", "Shrootles"},
-        {"Blizzard Bottle", "Shwooper"},
-        {"Slapcrackers", "Slapcrackers"},
-        {"Gogong", "Smackgoon"},
-        {"Bigfoot", "Smakk"},
-        {"Grizzle", "Sno"},
-        {"Snobble", "Snobble"},
-        {"Snoffel", "Snoffel"},
-        {"Wild Snoolf", "Snoolf"},
-        {"Winter Worm", "SnormWorm"},
-        {"Snowbirb", "Snowbirb"},
-        {"Snowbo", "Snowbo"},
-        {"Snowcake", "Snowcake"},
-        {"Snowzooka", "SnowCannon"},
-        {"Kobonker", "Snowcracker"},
-        {"Storm Globe", "SnowGlobe"},
-        {"Snow Gobbler", "SnowGobbler"},
-        {"The Snow Knight", "SnowKnight"},
-        {"Yeti Skull", "SnowMaul"},
-        {"Snow Stick", "SnowStick"},
-        {"Spice Sparklers", "SpiceSparklers"},
-        {"Spice Stones", "SpiceStones"},
-        {"Spike Wall", "SpikeWall"},
-        {"Bamboozle", "SplitBoss"},
-        {"Bam", "SplitBoss1"},
-        {"Boozle", "SplitBoss2"},
-        {"Spore Pack", "SporePack"},
-        {"Porkypine", "Sporkypine"},
-        {"Spuncher", "Spuncher"},
-        {"Marrow", "Spyke"},
-        {"Paw Paw", "Stinghorn"},
-        {"Stormbear Spirit", "StormbearSpirit"},
-        {"Truffle", "SummonBoss"},
-        {"Truffle", "SummonBoss2"},
-        {"Truffle", "SummonBoss3"},
-        {"Suncream", "SunberryJuice"},
-        {"Sunburst Tootoo", "SunburstDart"},
-        {"Sunlight Drum", "SunlightDrum"},
-        {"Sun Rod", "SunRod"},
-        {"Sunsong Box", "SunShard"},
-        {"Scrappy Sword", "Sword"},
-        {"Chikichi", "TailsFive"},
-        {"Chikani", "TailsFour"},
-        {"Chikagoru", "TailsOne"},
-        {"Chikasan", "TailsThree"},
-        {"Chikashi", "TailsTwo"},
-        {"Tigris", "Tigris"},
-        {"Tigris Mask", "TigrisMask"},
-        {"Mini Mika", "Timmy"},
-        {"Tiny Tyko", "TinyTyko"},
-        {"Maw Jaw", "Toothless"},
-        {"Totem of the Goat", "TotemOfTheGoat"},
-        {"Frost Jailer", "TrueFinalBoss1"},
-        {"Frost Crusher", "TrueFinalBoss2"},
-        {"Frost Lancer", "TrueFinalBoss3"},
-        {"Frost Bomber", "TrueFinalBoss4"},
-        {"Frost Junker", "TrueFinalBoss5"},
-        {"Frost Muncher", "TrueFinalBoss6"},
-        {"Alloy", "Turmeep"},
-        {"Queen Globerry", "Turnip"},
-        {"Tusk", "Tusk"},
-        {"Veiled Lady", "VeiledLady"},
-        {"Haze Balloon", "Vimifier"},
-        {"Bombarder", "Vimik"},
-        {"Tentickle", "Voido"},
-        {"Soulbound Skulls", "VoidStaff"},
-        {"Flask of Ink", "Voidstone"},
-        {"Hazeblazer", "Voodoo"},
-        {"Bombarder", "Vox"},
-        {"Waddlegoons", "Waddlegoons"},
-        {"Wallop", "Wallop"},
-        {"Rockhog", "Wally"},
-        {"Hog", "Wildling"},
-        {"Biji", "Witch"},
-        {"Snoof", "Wolfie"},
-        {"Woodhead", "Woodhead"},
-        {"Woolly Drek", "WoollyDrek"},
-        {"Wort", "Wort"},
-        {"Warthog", "Wrecker"},
-        {"Mini Muncher", "Wrenchy"},
-        {"Yuki", "Yuki"},
-        {"Azul Skull", "ZapOrb"},
-        {"Shen", "Zoog"},
-    };
     public static string Adjectivise(this string t)
     {
         var last = t[t.Length - 1];
@@ -661,24 +423,8 @@ public static class Extensions
         return t;
     }
 
-    // this isn't working cryge
-    public static T GetClone<T>(this T t) where T : ScriptableObject
-    {
-        T data = ScriptableObject.CreateInstance<T>();
-        foreach (var prop in t.GetType().GetProperties())
-        {
-            GeneralModifier.im.Print(prop.Name);
-            if (prop != null && prop.CanWrite)
-                data.Set(prop.Name, prop.GetValue(t));
-        }
-        return data;
-    }
+    
 
-    public static T RegisterStatusEffectInApi<T>(this T t) where T : StatusEffectData
-    {
-        GeneralModifier.GroupAdditions["StatusEffectData"].Add(t);
-        return t;
-    }
 
     #region Debugging
     public static T SetCheckError<T>(this T t, string property, object value)
@@ -987,7 +733,7 @@ public static class Extensions
     }
 
     /// <summary>
-    /// Register (but NOT overwrite) data in its AddressableLoader.groups
+    /// Register data in its AddressableLoader.groups
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="t"></param>
@@ -1166,14 +912,14 @@ public static class Extensions
     /// <param name="list"></param>
     /// <param name="copies"></param>
     /// <returns></returns>
-    public static ClassData CreateRewardPool(string type = "Units", DataFile[] list = default, int copies = 1)
+    public static RewardPool CreateRewardPool(string type = "Units", DataFile[] list = default, int copies = 1)
     {
         var data = ScriptableObject.CreateInstance<RewardPool>();
         data.type = type;
         data.copies = copies;
         data.list = list.ToRefArray().ToList();
 
-        return default;
+        return data;
     }
 
 
@@ -1191,12 +937,17 @@ public static class Extensions
     public static ClassData CreateClassData(string name, Inventory startingInventory = null, CardData[] leaders = null, RewardPool[] rewardPools = null, Sprite flag = null)
     {
         var basic = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>().classes[0];
-        
+
+        var newLeaders = leaders?.Select(
+            card => card.Clone().Set("cardType", basic.leaders[0].cardType)
+            .AddCreateScript(basic.leaders[0].createScripts[1])).ToArray();
+
         ClassData data = ScriptableObject.CreateInstance<ClassData>();
         data.name = name;
         data.requiresUnlock = basic.requiresUnlock;
+        data.characterPrefab = basic.characterPrefab;
         data.startingInventory = startingInventory ?? basic.startingInventory;
-        data.leaders = leaders?.ToRefArray() ?? basic.leaders;
+        data.leaders = newLeaders?.ToRefArray() ?? basic.leaders;
         data.rewardPools = rewardPools?.ToRefArray() ?? basic.rewardPools;
         data.flag = flag ?? CardAdder.LoadSpriteFromCardPortraits("CardPortraits\\FALLBACKBATTLESPRITE");
 

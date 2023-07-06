@@ -39,7 +39,7 @@ public class Patches : BasePlugin
         [HarmonyPatch(typeof(CharacterSelectScreen), "Start")]
         class Patch
         {
-            static void Prefix(CharacterSelectScreen __instance)
+            static void Postfix(CharacterSelectScreen __instance)
             {
                 gameMode ??= AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>();
 
@@ -47,33 +47,17 @@ public class Patches : BasePlugin
                 {
                     if (gameMode.classes.ToList().Find(a => a.name == classData.name) == null)
                     {
-                        __instance.leaderSelection.options += 1;
-                        __instance.leaderSelection.differentTribes += 1;
+                        //__instance.leaderSelection.options += 1;
+                        //__instance.leaderSelection.differentTribes += 1;
+                        __instance.options += 1;
+                        __instance.differentTribes += 1;
                         gameMode.classes = gameMode.classes.ToArray().AddItem(classData).ToRefArray();
                     }
                 }
             }
         }
 
-        //[HarmonyPatch(typeof(CampaignPopulator._Populate_d__4), nameof(CampaignPopulator._Populate_d__4.MoveNext))]
-        class CampaignPopulatorPopulate
-        {
-            static void Prefix(CampaignPopulator._Populate_d__4 __instance)
-            {
-                im.Print("Populating\n");
-                var campaign = __instance.campaign;
-                var pop = __instance.__4__this;
-            }
-        }
 
-        //[HarmonyPatch(typeof(UnityEngine.Object), nameof(UnityEngine.Object.Instantiate), new Type[] { typeof(UnityEngine.Object), typeof(UnityEngine.Transform), typeof(System.Boolean)})]
-        class inst
-        {
-            static void Prefix(UnityEngine.Object __instance)
-            {
-                im.Print("insting ");
-            }
-        }
 
 
 
@@ -83,11 +67,8 @@ public class Patches : BasePlugin
         {
             static void Prefix()
             {
-                if (gameMode != null)
-                {
-                    if (gameMode.classes.Count > 3)
-                        gameMode.classes = new Il2CppReferenceArray<ClassData>(gameMode.classes.RangeSubset(0, 3));
-                }
+                if (gameMode?.classes.Count > 3)
+                    gameMode.classes = new Il2CppReferenceArray<ClassData>(gameMode.classes.RangeSubset(0, 3));
             }
         }
     #endregion
@@ -99,6 +80,7 @@ public class Patches : BasePlugin
         {
             static void Postfix(BattleSetUp __instance)
             {
+                
                 battleSetUp = __instance;
                 var battle = battleSetUp.battle;
                 im.Print("battle set up has run");
@@ -127,11 +109,11 @@ public class Patches : BasePlugin
                         if (entity.owner == battle.enemy && entity._data.upgrades.Count > 0)
                         {
                             var charmNames = string.Join(" ", entity._data.upgrades.ToArray().Select(charm => charm.titleKey.GetLocalizedString().Replace(" Charm", "").Adjectivise())).Replace("Crown".Adjectivise()+" ", "");
-                            entity._data = entity._data.SetTitle($"{charmNames} {entity.data.titleKey.GetLocalizedString()}");
+                            if (!entity._data.titleKey.GetLocalizedString().Contains(charmNames)) entity._data = entity._data.SetTitle($"{charmNames} {entity.data.titleKey.GetLocalizedString()}");
                         }
 
                         // Strengthen pulse animation when counter at 1
-                        entity.imminentAnimation.strength = 1;
+                        entity.imminentAnimation.strength = 0.5f;
                     }
             }
         }
@@ -201,7 +183,7 @@ public class Patches : BasePlugin
             }
             static void Postfix(Hit hit)
             {
-                if (hit != null)
+                if (hit.countsAsHit)
                 {
                     Entity attacker = hit.attacker;
                     Entity target = hit.target;
@@ -346,6 +328,28 @@ public class Patches : BasePlugin
 
         #endregion
 
+
+        #region CardScript patches
+
+        [HarmonyPatch(typeof(CardScriptAddRandomHealth), nameof(CardScriptAddRandomHealth.Run))]
+        class CardScriptAddRandomHealthRun
+        {
+            static void Prefix(out int __state, CardData target)
+            {
+                __state = target.hp;
+            }
+            static void Postfix(int __state, CardData target)
+            {
+                im.Print($"Added {target.hp - __state} to {target.name}");
+            }
+
+        }
+
+
+        #endregion
+
+
+
         #endregion
     }
 
@@ -356,7 +360,7 @@ public class Patches : BasePlugin
     public override void Load()
     {
         Instance = this;
-        Harmony.CreateAndPatchAll(System.Reflection.Assembly.GetExecutingAssembly(), "WildFrost.Hope.GeneralModifiers");
+        //Harmony.CreateAndPatchAll(System.Reflection.Assembly.GetExecutingAssembly(), "WildFrost.Hope.GeneralModifiers");
         _patches = AddComponent<HopePatches>();
     }
 }
