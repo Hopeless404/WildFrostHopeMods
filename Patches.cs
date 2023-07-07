@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace WildFrostHopeMods;
 
-public class Patches : BasePlugin
+public class Patches
 {
     internal static GeneralModifier im = GeneralModifier.im;
 
@@ -168,7 +168,7 @@ public class Patches : BasePlugin
         {
             static void Prefix(Hit hit)
             {
-                if (hit != null)
+                if (hit.countsAsHit && hit.attacker != null)
                 {
                     Entity attacker = hit.attacker;
                     Entity target = hit.target;
@@ -183,7 +183,7 @@ public class Patches : BasePlugin
             }
             static void Postfix(Hit hit)
             {
-                if (hit.countsAsHit)
+                if (hit.countsAsHit && hit.attacker != null)
                 {
                     Entity attacker = hit.attacker;
                     Entity target = hit.target;
@@ -353,14 +353,4 @@ public class Patches : BasePlugin
         #endregion
     }
 
-
-    internal static Patches Instance;
-    private HopePatches _patches;
-
-    public override void Load()
-    {
-        Instance = this;
-        //Harmony.CreateAndPatchAll(System.Reflection.Assembly.GetExecutingAssembly(), "WildFrost.Hope.GeneralModifiers");
-        _patches = AddComponent<HopePatches>();
-    }
 }

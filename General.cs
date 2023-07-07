@@ -41,29 +41,9 @@ public class GeneralModifier : BasePlugin
         PauseMenu menu = new PauseMenu();
         private void Start()
         {
-            this.StartCoroutine(General());
-            //this.StartCoroutine(CardAdditions());
-            //this.StartCoroutine(LilBerrySummoner());  // Example of a customised summon effect on trigger
-            //this.StartCoroutine(Hellbender());          // Example of customised traits. [Endure]: Survive a fatal attack
-            // need to figure out the keyword description showing up wrong.
-            // turns out it was because I added it to the assetloadergroup with firstuppercase,
-            // when it actually uses all lowercase.
-            //this.StartCoroutine(KnightSummoner());    // Example of NextPhase statuseffects (not working/clean yet)
-            this.StartCoroutine(Stinkbug());          // Example of While Active effects (not working with FrontEnemy flag)
-            this.StartCoroutine(CorpseEater());       // Example of "moving" a card from hand to board
-            //this.StartCoroutine(Tarblade());          // Example of custom charms
-            //this.StartCoroutine(Hellfire());    // 
-                                                // need to figure out how to apply when it has injured trait
-            this.StartCoroutine(Witch());     // Example of using Actions to change effect stacks (current X)
-            this.StartCoroutine(Bellist());     // yada yada
-            this.StartCoroutine(Sniper());      // Example of clicky thingy
-            //this.StartCoroutine(Ouroboros());
-            //this.StartCoroutine(Fleet());
-            this.StartCoroutine(TaintedSpike()); // Example of reducing specific effects
-
-            //this.StartCoroutine(TreadmillFight());
-
             this.StartCoroutine(LoadAllGroups());
+            //this.StartCoroutine(General());
+            //this.StartCoroutine(CardAdditions());
         }
 
         void Update()
@@ -173,7 +153,6 @@ public class GeneralModifier : BasePlugin
             yield return new WaitUntil((Func<bool>)(() => SceneManager.IsLoaded("Town")));
             StartCoroutine(AddressableLoader.LoadGroup("CardData"));
             StartCoroutine(AddressableLoader.LoadGroup("GameModifierData"));
-
         }
 
         internal static void CampaignInfo()
@@ -254,22 +233,39 @@ public class GeneralModifier : BasePlugin
                 im.Print("Please use the Reroll button instead!");
         }
 
-        #region WIP stuff
-
-        private IEnumerator CardAdditions()
+        internal IEnumerator CardAdditions()
         {
             yield return new WaitUntil((Func<bool>)(() =>
             AddressableLoader.IsGroupLoaded("CardData")));
+
+            Modfight();             // Custom battle + fallback enemy leader
+            LilBerrySummoner();     // Customised summon effect on trigger
+            Stinkbug();             // While Active effects (not working with FrontEnemy flag)
+            CorpseEater();          // "Moving" a card from hand to board (changed slightly)
+            Tarblade(); // wip      // Custom charm
+            Witch();                // Using Actions to change effect stacks (current X)
+            Bellist();              // A lot of things
+            TaintedSpike();         // Lose stacks of specific effects
+            Sniper();               // Clicky thingy
+
+            //HopeTribe();            // Implementing a new tribe. bugs to fix: can't continue or give up
+
+            // WIPs
+            //Hellbender();           // Endure: Survive a fatal attack
+            //Hellfire();             // need to figure out how to apply when it has injured trait
+            //KnightSummoner();       // NextPhase effects (not working/clean yet)
+            //Ouroboros();            // moving status effects to summon
+            //Fleet();                // Fleeting: When all stacks are lost, die
+            //TreadmillFight();
         }
+
+        #region WIP stuff
+
 
 
         // to test carrying over things to summon
-        internal IEnumerator Ouroboros()
+        internal void Ouroboros()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
             var seWhenSacdApplyTrait = Extensions.CreateStatusEffectData<StatusEffectApplyToSummon>("Hope", "When Sacrificed Apply Sacrificial + 1 To Summon",
                 type: "sacrificial", stackable:false).SetText("sacrifice effect {a}");
             //this shouldn't be stackable for some reason
@@ -321,13 +317,8 @@ public class GeneralModifier : BasePlugin
 
         }
 
-        internal IEnumerator Copyboros()
+        internal void Copyboros()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
-
             var seWhenSacdSummonCopy = Extensions.CreateStatusEffectData<StatusEffectApplyToSummon>("Hope", "When Sacrificed Apply Sacrificial + 1 To Summon",
                 type: "sacrificial", stackable:false).SetText("sacrifice effect {a}");
             //this shouldn't be stackable for some reason
@@ -379,12 +370,8 @@ public class GeneralModifier : BasePlugin
 
         }
 
-        internal IEnumerator Fleet()
+        internal void Fleet()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
             var seFleetCount = Extensions.CreateStatusEffectData<StatusEffectApplyXWhenDamageTaken>("Hope", "Fleeting Count").Set("type", "fleeting");
 
             var seReducer = Extensions.CreateStatusEffectData<StatusEffectInstantLoseX>("", "Instant Lose Fleeting", type:"lose fleeting")
@@ -420,12 +407,8 @@ public class GeneralModifier : BasePlugin
         }
 
         //wip
-        internal IEnumerator Hellbender()
+        internal void Hellbender()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
             var Health = Extensions.CreateStatusEffectData<StatusEffectInstantSetHealth>("Hope", "Health", equalAmount: true).SetText("Retain 1 Health").Set("eventPriority", -10);
             var DeployHealth = Extensions.CreateStatusEffectData<StatusEffectApplyXWhenDeployed>("Hope", "DeployHealth", effectToApply: Health, applyToFlags: StatusEffectApplyX.ApplyToFlags.Self);
             
@@ -487,12 +470,8 @@ public class GeneralModifier : BasePlugin
 
 
         // wip, make keyword and trait
-        internal IEnumerator Hellfire()
+        internal void Hellfire()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                   (AddressableLoader.IsGroupLoaded("CardUpgradeData") &&
-                   AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
             var c = CardUpgradeAdder.CreateCardUpgradeData("Hope", "Hellfire")
                .SetText("While <color=#FF002D>injured</color>, start battles with 75% <keyword=health> and <keyword=attack>")
                .SetTitle("Hellfire charm")
@@ -509,12 +488,33 @@ public class GeneralModifier : BasePlugin
 
         #region Mostly functional
 
-        // example using predefined overload
-        internal IEnumerator LilBerrySummoner()
+        internal void Modfight()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
+            Extensions.CreateBattleData("Hope", "Battle", "Modfight!",
+                pools: Extensions.CreateBattleWavePoolData("", "Battle", "Wave Pool 1",
+                    waves: new BattleWavePoolData.Wave[0], //template.pools[0].waves,
+                    unitList: new List<string>() { "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons" },
+                    pullCount: 1
+                    ).ToArray())
+                .RegisterInGroup()
+                .AddToTier(0);
+                
+        }
+
+        internal void HopeTribe()
+        {
+            var hopeLeaders = new List<CardData>();
+            foreach (var card in AddressableLoader.groups["CardData"].list) if (card.Cast<CardData>().name.StartsWith("Hope.")) hopeLeaders.Add(card.Cast<CardData>());
+
+            var gameMode = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>();
+            
+            var hopeUnitPool = Extensions.CreateRewardPool("Units", hopeLeaders.ToArray());
+            Extensions.AddClass(Extensions.CreateClassData("HopeTribe", leaders: hopeLeaders.ToArray(), rewardPools: gameMode.classes[1].rewardPools.ToArray().AddToArray(hopeUnitPool)));
+        }
+
+        // example using predefined overload
+        internal void LilBerrySummoner()
+        {
             var TestSummon = Extensions.CreateStatusEffectData<StatusEffectSummon>("Hope", "Summon LilBerry",
                 newCard: "LilBerry");
             var TestInstantSummon = Extensions.CreateStatusEffectData<StatusEffectInstantSummon>("Hope", "TestInstantSummon",
@@ -538,13 +538,8 @@ public class GeneralModifier : BasePlugin
         }
 
         // changed applyToFlag
-        internal IEnumerator Stinkbug()
+        internal void Stinkbug()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                (AddressableLoader.IsGroupLoaded("CardData") &&
-                AddressableLoader.IsGroupLoaded("StatusEffectData") &&
-                AddressableLoader.IsGroupLoaded("KeywordData"))));
-
             var se = Extensions.CreateStatusEffectData<StatusEffectWhileActiveX>("Hope", "While Active Reduce Attack To EnemiesInRow",
                 effectToApply: CardAdder.VanillaStatusEffects.OngoingReduceAttack.StatusEffectData(),
                 applyToFlags: StatusEffectApplyX.ApplyToFlags.EnemiesInRow,
@@ -568,12 +563,8 @@ public class GeneralModifier : BasePlugin
         }
 
         //wip, balancing
-        internal IEnumerator CorpseEater()
+        internal void CorpseEater()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                AddressableLoader.IsGroupLoaded("CardData") &&
-                AddressableLoader.IsGroupLoaded("StatusEffectData")));
-
             var summonCorpseEater = Extensions.CreateStatusEffectData<StatusEffectSummon>("Hope", "Summon Corpse Eater");
 
             var TestInstantSummon = Extensions.CreateStatusEffectData<StatusEffectInstantSummon>("Hope", "Instant Summon Corpse Eater",
@@ -605,12 +596,8 @@ public class GeneralModifier : BasePlugin
             c.RegisterInGroup();
         }
 
-        internal IEnumerator Tarblade()
+        internal void Tarblade()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                   (AddressableLoader.IsGroupLoaded("CardUpgradeData") &&
-                   AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
             var keyTar = Extensions.CreateKeywordData("", "Tar", "Tar", "Deal additional damage for each <Tar> card in hand. Counts as <Tar Blade>");
             var trTar = Extensions.CreateTraitData("Hope", "Tar", keyTar);
 
@@ -625,12 +612,8 @@ public class GeneralModifier : BasePlugin
                 ).RegisterInGroup();
         }
 
-        internal IEnumerator Witch()
+        internal void Witch()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                AddressableLoader.IsGroupLoaded("CardData") &&
-                AddressableLoader.IsGroupLoaded("StatusEffectData")));
-
             var witchEffect = Extensions.CreateStatusEffectData<StatusEffectApplyXInstant>("", "Instant Apply Current Overload To Self",
                 effectToApply: CardAdder.VanillaStatusEffects.Overload.StatusEffectData(),
                 applyToFlags:ApplyToFlags.Self
@@ -667,12 +650,8 @@ public class GeneralModifier : BasePlugin
                     );
         }
 
-        internal IEnumerator Bellist()
+        internal void Bellist()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                AddressableLoader.IsGroupLoaded("CardData") &&
-                AddressableLoader.IsGroupLoaded("StatusEffectData")));
-
             #region chime
             var chime = CardAdder.CreateCardData("", "Chime")
                 .SetTitle("Chime")
@@ -769,12 +748,8 @@ public class GeneralModifier : BasePlugin
         }
 
         // the dumb realisation there is literally an effect to lose stacks of other specific effects
-        internal IEnumerator TaintedSpike()
+        internal void TaintedSpike()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-                AddressableLoader.IsGroupLoaded("CardData") &&
-                AddressableLoader.IsGroupLoaded("StatusEffectData")));
-
             var gainTeeth = Extensions.CreateStatusEffectData<StatusEffectApplyXOnCardPlayed>("", "On Card Played Apply Teeth To Self",
                 effectToApply: CardAdder.VanillaStatusEffects.Teeth.StatusEffectData(),
                 applyToFlags: ApplyToFlags.Self)
@@ -814,21 +789,8 @@ public class GeneralModifier : BasePlugin
                 //    });
         }
 
-
-        internal IEnumerator EnableRoutineAfterDeploy(Entity entity, string statusType)
+        internal void Sniper()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            entity.statusEffects.Find(se => se.type == statusType) != null));
-            var se = entity.statusEffects.Find(se => se.type == statusType).Cast<StatusEffectBombard>();
-            se.SetTargets().MoveNext();
-        }
-
-        internal IEnumerator Sniper()
-        {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
-
             var statusSniper = Extensions.CreateStatusEffectData<StatusEffectBombard>("Hope", "Sniper", type: "sniper")
                 .Set("targetCountRange", new Vector2Int(1, 1))
                 .Set("hitFriendlyChance", 0)
@@ -872,16 +834,14 @@ public class GeneralModifier : BasePlugin
                 //.AddPreTurnAction(unit => CoroutineManager.Start(Battle.CardCountDown(unit)));
         }
 
+
         #endregion
 
-        #region ideas with close to no work
+        #region dropped ideas
 
         //wip 0 progress
-        internal IEnumerator KnightSummoner()
+        internal void KnightSummoner()
         {
-            yield return new WaitUntil((Func<bool>)(() =>
-            (AddressableLoader.IsGroupLoaded("CardData") &&
-            AddressableLoader.IsGroupLoaded("StatusEffectData"))));
             var modName = "Hope";
             var effectName = "Change to LilBerry";
             var param_CardName = "LilBerry";
@@ -965,25 +925,52 @@ public class GeneralModifier : BasePlugin
             AddressableLoader.IsGroupLoaded("GameModifierData")    
         ));
         string[] layers = System.Linq.Enumerable.Range(0, 31).Select(index => LayerMask.LayerToName(index)).Where(l => !string.IsNullOrEmpty(l)).ToArray();
-        foreach (var i in layers)
-            im.Print(i);
+        //foreach (var i in layers) im.Print(i);
 
-        
+        var se = Extensions.CreateStatusEffectData<StatusEffectInstantMultiple>("Hope", "multiple")
+            .Set("effects", new StatusEffectInstant[]
+            {
+                CardAdder.VanillaStatusEffects.ReduceCounter.StatusEffectData().Cast<StatusEffectInstant>(),
+                CardAdder.VanillaStatusEffects.IncreaseAttack.StatusEffectData().Cast<StatusEffectInstant>()
+            }.ToRefArray());
 
-        var template = AddressableLoader.groups["BattleData"].lookup["Snowbos"].Cast<BattleData>();
 
-        var b = Extensions.CreateBattleData("", "Battle", "Modfight!",
-            pools: Extensions.CreateBattleWavePoolData("", "Battle", "Wave Pool 1",
-                waves: new BattleWavePoolData.Wave[0], //template.pools[0].waves,
-                unitList: new List<string>() { "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons" },
-                pullCount: 1
-                ).ToArray())
-            .RegisterInGroup();
+        var s = Extensions.CreateStatusEffectData<StatusEffectApplyXOnCardPlayed>("", "on play", effectToApply: se, applyToFlags: ApplyToFlags.Self);
 
-        
+        var c = CardAdder.CreateCardData("Hope", "Summoner")
+                .SetTitle("Summoner")
+                .SetIsUnit()
+                .SetCanPlay(CardAdder.CanPlay.CanPlayOnEnemy | CardAdder.CanPlay.CanPlayOnBoard)
+                .SetSprites("CardPortraits\\SunPortrait", "CardPortraits\\testBackground")
+                .SetStats(5, 0, 1)
+                .SetBloodProfile(CardAdder.VanillaBloodProfiles.BloodProfilePinkWisp)
+                .SetIdleAnimationProfile(CardAdder.VanillaCardAnimationProfiles.GoopAnimationProfile)
+                .SetStartWithEffects(s.StatusEffectStack(1));
+                //.RegisterInGroup();
+
+        var gameMode = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>();
+        var unit = gameMode.classes[2].rewardPools.ToList().Find(a => a.name == "GeneralUnitPool");
+        var charm = gameMode.classes[2].rewardPools.ToList().Find(a => a.name == "GeneralCharmPool");
+        var item = gameMode.classes[2].rewardPools.ToList().Find(a => a.name == "GeneralItemPool");
+        gameMode.classes[2].rewardPools = new RewardPool[] { unit, charm, item }.ToRefArray();
+        im.Print(gameMode.classes[2].rewardPools.Count + "pools");
+        //foreach (var item in gameMode.classes[0].rewardPools.ToList().Find(a => a.name == "GeneralUnitPool").list)
+        //    im.Print(item.name);
+
+        var o = new MyCommand();
+        //Console.commands.Add(o);
     }
+    public Console.Command command = new Console.CommandToggleFps();
+    public class MyCommand : Console.Command
+    {
+        public new string id = "test";
+        private Console.Command command = new Console.CommandKillAll();
+        public override void Run(string args)
+        {
+            command.Run(args);
+        }
 
-
+    }
 
 
 

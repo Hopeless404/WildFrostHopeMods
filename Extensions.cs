@@ -906,6 +906,19 @@ public static class Extensions
     }
 
     /// <summary>
+    /// Add BattleData to the normal campaign at tier n, where n is between 0 (first fight) to 8 (heart fight)
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    public static BattleData AddToTier(this BattleData t, int n)
+    {
+        var b = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>().populator.tiers[n].battlePool;
+        b = b.ToArray().AddToArray(t);
+        return t;
+    }
+
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="type">Units, Charms, Items</param>

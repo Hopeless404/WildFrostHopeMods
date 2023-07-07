@@ -43,11 +43,11 @@ public class TribeAdder : BasePlugin
             im.Print(hopeLeaders[0].createScripts.Count);
 
             var gameMode = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>();
-            var c = Extensions.CreateClassData("TestTribe", leaders: gameMode.classes[1].leaders, rewardPools: gameMode.classes[2].rewardPools);
+            var c = CreateClassData("TestTribe", leaders: gameMode.classes[1].leaders, rewardPools: gameMode.classes[2].rewardPools);
             //Extensions.AddClass(c);
 
             var hopeUnitPool = Extensions.CreateRewardPool("Units", hopeLeaders.ToArray());
-            Extensions.AddClass(Extensions.CreateClassData("HopeTribe", leaders: hopeLeaders.ToArray(), rewardPools: gameMode.classes[1].rewardPools.ToArray().AddToArray(hopeUnitPool)));
+            Extensions.AddClass(CreateClassData("HopeTribe", leaders: hopeLeaders.ToArray(), rewardPools: gameMode.classes[1].rewardPools.ToArray().AddToArray(hopeUnitPool)));
 
             //gameMode.classes[0].flag = CardAdder.LoadSpriteFromCardPortraits("CardPortraits\\FALLBACKBATTLESPRITE");
         }
