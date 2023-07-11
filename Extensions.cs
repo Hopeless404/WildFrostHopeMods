@@ -12,6 +12,7 @@ using WildfrostModMiya;
 using System.Reflection;
 using Il2CppSystem.Data;
 using Rewired.Utils;
+using Il2CppSystem.Dynamic.Utils;
 
 namespace WildFrostHopeMods;
 
@@ -299,8 +300,7 @@ public static class Extensions
                 && _damageType == (damageType ?? _damageType))
                     return action;
                 return (hit) => { };
-            })
-            );
+            }));
         return c;
     }
     public static CardData AddWhenHitPlayRingSFX(this CardData c, string? attackerName = null, (int min, int max)? damageRange = null, string? damageType = null)
@@ -321,8 +321,7 @@ public static class Extensions
             && _damageType == (damageType ?? _damageType))
                 return action;
             return (hit) => { };
-        })
-        );
+        }));
         return c;
     }
     public static CardData AddOnHitPreAction(this CardData c, Action<Hit> action, string? targetName = null, (int min, int max)? damageRange = null, string? damageType = null)
@@ -335,8 +334,7 @@ public static class Extensions
             && _damageType == (damageType ?? _damageType))
                 return action;
             return (hit) => { };
-        })
-        );
+        }));
         return c;
     }
 
@@ -355,8 +353,7 @@ public static class Extensions
             if (entity.name == c.name)
                 return action;
             return () => { };
-        })
-        );
+        }));
         return c;
     }
 
@@ -367,8 +364,7 @@ public static class Extensions
             if (unit.name == c.name)
                 return action;
             return (unit) => { };
-        })
-        );
+        }));
         return c;
     }
 
@@ -379,8 +375,7 @@ public static class Extensions
             if (unit.name == c.name)
                 return action;
             return (unit) => { };
-        })
-        );
+        }));
         return c;
     }
 
@@ -878,6 +873,7 @@ public static class Extensions
                 .SetBloodProfile(gnome.bloodProfile)
                 .SetIdleAnimationProfile(gnome.idleAnimationProfile)
                 .SetFlavour("Oops... the devs forgot to put a boss here!")
+                .Set("value", 1000)
                 .RegisterInGroup();
 
         if (!enemyLeader) pools = pools.AddItem(CreateBattleWavePoolData(modName, titleName, wavePoolName: "Boss Wave Pool",
@@ -911,10 +907,11 @@ public static class Extensions
     /// <param name="t"></param>
     /// <param name="n"></param>
     /// <returns></returns>
-    public static BattleData AddToTier(this BattleData t, int n)
+    public static BattleData AddToTier(this BattleData t, int n, int copies = 1)
     {
-        var b = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>().populator.tiers[n].battlePool;
-        b = b.ToArray().AddToArray(t);
+        var populator = AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>().populator;
+        for (int i = 0; i < copies; i++)
+            populator.tiers[n].battlePool = populator.tiers[n].battlePool.AddItem(t).ToArray();
         return t;
     }
 

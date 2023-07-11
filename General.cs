@@ -20,6 +20,7 @@ using UnityEngine.Localization;
 using FMOD;
 using Newtonsoft.Json.Utilities;
 using Rewired.Utils;
+using System.Linq;
 
 namespace WildFrostHopeMods;
 
@@ -29,32 +30,25 @@ public class GeneralModifier : BasePlugin
     internal static GeneralModifier Instance;
     internal static GeneralModifier im = new GeneralModifier();
 
-    //MiscTools.Clone(obj);
-    
-
-
-
     // i put most stuff in here
     public class Behaviour : MonoBehaviour
     {
-
         PauseMenu menu = new PauseMenu();
+        GameObject[] systemObjects;
         private void Start()
         {
             this.StartCoroutine(LoadAllGroups());
-            //this.StartCoroutine(General());
-            //this.StartCoroutine(CardAdditions());
+            this.StartCoroutine(General());
+            this.StartCoroutine(CardAdditions());
         }
 
         void Update()
         {
-
-
-
             // Press ` but not CTRL
             if (Input.GetKeyDown("`") && !Input.GetKey(KeyCode.LeftAlt))
             {
                 CampaignInfo();
+                //if (Battle.instance != null) BattleInfo();
             }
 
 
@@ -102,6 +96,23 @@ public class GeneralModifier : BasePlugin
                         .Find(a => a.name == "LilBerry")
                         .Cast<GameObject>();
                     im.Print(go.name);
+                }
+
+                if (Input.GetKeyDown("d"))
+                {
+                    Scene current = SceneManager.GetActive();
+                    CoroutineManager.Start(SceneManager.SetActive("Systems"));
+                    Scene s = SceneManager.GetActive();
+                    systemObjects = s.GetRootGameObjects().ToArray();
+
+                    foreach (var systemObject in systemObjects)
+                    {
+                        foreach (var system in systemObject.GetComponentsInChildren<GameSystem>())
+                        {
+                            im.Print(system.ToString().Split('(', ')')[1]);
+                        }
+                    }
+                    CoroutineManager.Start(SceneManager.SetActive(current.name));
                 }
 
                 // ALT+R: Reloar campaign ("The R Key")
@@ -163,15 +174,15 @@ public class GeneralModifier : BasePlugin
             {
                 if (node.type.name == "CampaignNodeItem")
                 {
-                    im.Print($"[Item {node.id}] info: {node.seed}");
-                    var cards = node.data["cards"].Cast<SaveCollection<String>>();
+                    var cards = node.data["cards"].Cast<SaveCollection<string>>();
+                    im.Print($"[Item {node.id}] seed: {node.seed}");//, value: {cards.collection.ToArray().Select(name => name.ToCardData().value).Sum()}");
                     im.Print($"items: {string.Join(", ", cards.collection.ToArray().Select(name => name.ToCardData().titleKey.GetLocalizedString()))}\n");
                 }
 
                 if (node.type.name == "CampaignNodeCompanion")
                 {
-                    im.Print($"[Frozen Travellers {node.id}] info: {node.seed}");
-                    var cards = node.data["cards"].Cast<SaveCollection<String>>();
+                    var cards = node.data["cards"].Cast<SaveCollection<string>>();
+                    im.Print($"[Frozen Travellers {node.id}] seed: {node.seed}");//, value: {cards.collection.ToArray().Select(name => name.ToCardData().value).Sum()}");
                     im.Print($"units: {string.Join(", ", cards.collection.ToArray().Select(name => name.ToCardData().titleKey.GetLocalizedString()))}\n");
                 }
 
@@ -199,14 +210,20 @@ public class GeneralModifier : BasePlugin
                     foreach (var item in shopData.items)
                     {
                         var card = Extensions.CardDataLookup(item.cardDataName);
-                        im.Print($"item: {card.titleKey.GetLocalizedString()} {item.price}");
+                        im.Print($"item: {card.titleKey.GetLocalizedString()} {item.price}");//, value: {card.value}");
                     }
                     im.Print($"charms: {string.Join(", ", shopData.charms.ToArray().Select(name => name.ToCardUpgradeData().titleKey.GetLocalizedString().Replace(" Charm", "")))}\n");
                 }
-
             }
 
-            im.Print(Campaign.Data.Seed);
+            im.Print($"Campaign seed: {Campaign.Data.Seed}");
+        }
+
+        internal static void BattleInfo()
+        {
+            var enemyCards = Array.FindAll<Entity>(Battle.instance.cards.ToArray(), entity => entity.owner == Battle.instance.enemy);
+            foreach (var card in enemyCards)
+                im.Print($"{card.name}: {card._data} cloned from {card.data}");
         }
 
         internal static void QuickRestart()
@@ -239,14 +256,15 @@ public class GeneralModifier : BasePlugin
             AddressableLoader.IsGroupLoaded("CardData")));
 
             Modfight();             // Custom battle + fallback enemy leader
-            LilBerrySummoner();     // Customised summon effect on trigger
-            Stinkbug();             // While Active effects (not working with FrontEnemy flag)
-            CorpseEater();          // "Moving" a card from hand to board (changed slightly)
-            Tarblade(); // wip      // Custom charm
-            Witch();                // Using Actions to change effect stacks (current X)
-            Bellist();              // A lot of things
+            //LilBerrySummoner();     // Customised summon effect on trigger
+            //Stinkbug();             // While Active effects (not working with FrontEnemy flag)
+            //CorpseEater();          // "Moving" a card from hand to board (changed slightly)
+            //Tarblade(); // wip      // Custom charm
+            //Witch();                // Using Actions to change effect stacks (current X)
+            //Bellist();              // A lot of things
             TaintedSpike();         // Lose stacks of specific effects
-            Sniper();               // Clicky thingy
+            //Sniper();               // Clicky thingy
+            //Companionise();
 
             //HopeTribe();            // Implementing a new tribe. bugs to fix: can't continue or give up
 
@@ -261,6 +279,23 @@ public class GeneralModifier : BasePlugin
 
         #region WIP stuff
 
+        internal void Goldrush() // testing the conversion of a card's "value" to their gold
+        // enemies drop (if nonnegative) their value * the player's enemyGoldFactor (0.05) rounded down 
+        {
+            for (int i=0; i<50; i++)
+            {
+                var c = CardAdder.CreateCardData("Hope", $"G{i}")
+                .SetTitle($"Goldrusher {i}")
+                .SetIsUnit()
+                .SetCanPlay(CardAdder.CanPlay.CanPlayOnEnemy | CardAdder.CanPlay.CanPlayOnBoard)
+                .SetSprites("CardPortraits\\SunPortrait", "CardPortraits\\testBackground")
+                .SetStats(1, null, 0)
+                .SetBloodProfile(CardAdder.VanillaBloodProfiles.BloodProfilePinkWisp)
+                .SetIdleAnimationProfile(CardAdder.VanillaCardAnimationProfiles.GoopAnimationProfile)
+                .Set("value", 10*i)
+                .RegisterInGroup();
+            }
+        }
 
 
         // to test carrying over things to summon
@@ -483,6 +518,32 @@ public class GeneralModifier : BasePlugin
                ).RegisterInGroup();
         }
 
+        public abstract class newScript : CardScript { }
+        public class CardScriptChangeCardType : newScript
+        {
+            CardScriptBecomeBasicItemCard o = new CardScriptBecomeBasicItemCard();
+
+            public override void Run(CardData target)
+            {
+                o.Run(target);
+            }
+        }
+
+        internal void Companionise()
+        {
+            var c = CardUpgradeAdder.CreateCardUpgradeData("Hope", "Pine")
+               .SetText("Gain <1><sprite name=scrap> and <4><sprite name=counter>")
+               .SetTitle("Pine charm")
+               .SetUpgradeType(CardUpgradeData.Type.Charm)
+               .SetImage("CardPortraits\\TarCharm")
+               .AddTargetConstraint(Extensions.CreateTargetConstraint<TargetConstraintIsItem>())
+               //.AddScript(Extensions.CreateCardScript<CardScriptChangeCardType>())
+               .AddScript(Extensions.CreateCardScript<CardScriptAddRandomCounter>(
+                   range: new Vector2Int(4, 4)))
+               .AddScript(Extensions.CreateCardScript<CardScriptAddPassiveEffect>(
+                   effect: CardAdder.VanillaStatusEffects.Scrap.StatusEffectData()))
+               .RegisterInGroup();
+        }
 
         #endregion
 
@@ -490,15 +551,17 @@ public class GeneralModifier : BasePlugin
 
         internal void Modfight()
         {
-            Extensions.CreateBattleData("Hope", "Battle", "Modfight!",
+            var b = Extensions.CreateBattleData("Hope", "Battle", "Modfight!",
                 pools: Extensions.CreateBattleWavePoolData("", "Battle", "Wave Pool 1",
                     waves: new BattleWavePoolData.Wave[0], //template.pools[0].waves,
                     unitList: new List<string>() { "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons", "Waddlegoons" },
                     pullCount: 1
                     ).ToArray())
                 .RegisterInGroup()
-                .AddToTier(0);
-                
+                .AddToTier(0, copies: 3);
+
+            im.Print(AddressableLoader.groups["GameMode"].lookup["GameModeNormal"].Cast<GameMode>().populator.tiers[0].battlePool.Count);
+
         }
 
         internal void HopeTribe()
@@ -512,7 +575,6 @@ public class GeneralModifier : BasePlugin
             Extensions.AddClass(Extensions.CreateClassData("HopeTribe", leaders: hopeLeaders.ToArray(), rewardPools: gameMode.classes[1].rewardPools.ToArray().AddToArray(hopeUnitPool)));
         }
 
-        // example using predefined overload
         internal void LilBerrySummoner()
         {
             var TestSummon = Extensions.CreateStatusEffectData<StatusEffectSummon>("Hope", "Summon LilBerry",
@@ -753,17 +815,17 @@ public class GeneralModifier : BasePlugin
             var gainTeeth = Extensions.CreateStatusEffectData<StatusEffectApplyXOnCardPlayed>("", "On Card Played Apply Teeth To Self",
                 effectToApply: CardAdder.VanillaStatusEffects.Teeth.StatusEffectData(),
                 applyToFlags: ApplyToFlags.Self)
-                .SetText("Gain <{a}> <sprite name=teeth>");
+                .SetText("Gain <{a}><sprite name=teeth>");
 
             var fakeReduce = Extensions.CreateStatusEffectData<StatusEffectInstantLoseX>("", "Instant Lose Teeth", type: "lose teeth")
                 .Set("statusToLose", CardAdder.VanillaStatusEffects.Teeth.StatusEffectData())
                 //.Set("doPing", true) // debugging
-                .SetText("Lose <{a}> <sprite name=teeth>");
+                .SetText("Lose <{a}><sprite name=teeth>");
 
             var hitEffect = Extensions.CreateStatusEffectData<StatusEffectApplyXWhenHit>("", "When Hit Lose Teeth", type: "reducer",
                 effectToApply : fakeReduce,
                 applyToFlags:ApplyToFlags.Self)
-                .SetText("When hit, reduce <sprite name=teeth> by <{a}>");
+                .SetText("When hit, lose <{a}><sprite name=teeth>");
 
             var c = Extensions.CardDataLookup("Jagzag")
                 .SetStats(8, null, 2)
@@ -958,26 +1020,31 @@ public class GeneralModifier : BasePlugin
         //    im.Print(item.name);
 
         var o = new MyCommand();
+        var o2 = new Console.CommandKillAll();
+        //o.CompareWith<Console.Command>(o2);
         //Console.commands.Add(o);
+        Console.commands.Add(o2);
     }
     public Console.Command command = new Console.CommandToggleFps();
-    public class MyCommand : Console.Command
+    
+    public abstract class newCommand: Console.Command
     {
-        public new string id = "test";
-        private Console.Command command = new Console.CommandKillAll();
+        // hopefully this "clones" the abstract class
+    }
+    public class MyCommand : newCommand
+    {
+        private Console.CommandKillAll template = new Console.CommandKillAll();
+        public override string id { get { return "test"; } }
+        public override string format { get { return "test"; } }
         public override void Run(string args)
         {
-            command.Run(args);
+            template.Run(args);
         }
 
     }
 
 
-
-
-
     private Behaviour _behaviour;
-
 
     public override void Load()
     {
@@ -987,15 +1054,6 @@ public class GeneralModifier : BasePlugin
         Harmony.CreateAndPatchAll(System.Reflection.Assembly.GetExecutingAssembly(), "WildFrost.Hope.GeneralModifiers");
         _behaviour = AddComponent<Behaviour>();
     }
-
-
-
-
-
-
-
-
-
 
 
     #region Old stuff
