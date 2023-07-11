@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace WildFrostHopeMods;
 
-[BepInPlugin("WildFrost.Hope.GeneralModifiers", "General Modifiers", "0.1.1.0")]
+[BepInPlugin("WildFrost.Hope.GeneralModifiers", "General Modifiers", "0.1.1.1")]
 public class GeneralModifier : BasePlugin
 {
     internal static GeneralModifier Instance;
@@ -42,7 +42,7 @@ public class GeneralModifier : BasePlugin
             this.StartCoroutine(CardAdditions());
         }
 
-        void Update()
+        private void Update()
         {
             // Press ` but not CTRL
             if (Input.GetKeyDown("`") && !Input.GetKey(KeyCode.LeftAlt))
@@ -53,93 +53,6 @@ public class GeneralModifier : BasePlugin
 
 
             // ALT commands
-            if (Input.GetKey(KeyCode.LeftAlt))
-            {
-                // ALT+1: 
-                if (Input.GetKeyDown("1"))
-                {
-                    //Campaign.Data.ToString();
-                    //Campaign.instance.nodes[12].seed = 
-                    MapNode node = FindObjectsOfType<MapNode>().ToList()
-                        .Find(a => a.IsHovered)
-                        .Cast<MapNode>();
-                    node.campaignNode.seed = Dead.Random.Seed();
-                    im.Print("Hover node: " + node.campaignNode.id);
-
-
-
-                }
-
-                // ALT+2: 
-                if (Input.GetKeyDown("2"))
-                {
-                    var gold = ScriptableAmount.CreateInstance<ScriptableGold>();
-                    gold.factor = 1;
-
-                    if (Battle.instance != null)
-                    {
-                        var entityList = Battle.GetCardsOnBoard();
-                        foreach (var entity in entityList)
-                        {
-                            im.Print(entity.data.cardType.name);
-                            if (entity.data.cardType.name == "Enemy")
-                            {
-                                im.Print(entity.data.name + " drops " + gold.Get(entity));
-                            }
-                        }
-                    }
-                }
-
-                if (Input.GetKeyDown("3"))
-                {
-                    GameObject go = FindObjectsOfType<GameObject>(includeInactive: true).ToList()
-                        .Find(a => a.name == "LilBerry")
-                        .Cast<GameObject>();
-                    im.Print(go.name);
-                }
-
-                if (Input.GetKeyDown("d"))
-                {
-                    Scene current = SceneManager.GetActive();
-                    CoroutineManager.Start(SceneManager.SetActive("Systems"));
-                    Scene s = SceneManager.GetActive();
-                    systemObjects = s.GetRootGameObjects().ToArray();
-
-                    foreach (var systemObject in systemObjects)
-                    {
-                        foreach (var system in systemObject.GetComponentsInChildren<GameSystem>())
-                        {
-                            im.Print(system.ToString().Split('(', ')')[1]);
-                        }
-                    }
-                    CoroutineManager.Start(SceneManager.SetActive(current.name));
-                }
-
-                // ALT+R: Reloar campaign ("The R Key")
-                if (Input.GetKeyDown("r"))
-                    QuickRestart();
-
-                if (Input.GetKeyDown("s"))
-                {
-                    //SaveImageFiles();
-                    PauseMenu menu = new PauseMenu();
-                    AddressableLoader.LoadGroup("CardData");
-                    ExportCards exporter = new ExportCards();
-                    //this.StartCoroutine(exporter.Start());
-                }
-
-                if (Input.GetKeyDown("z"))
-                {
-                    var source = this.GetComponents<Component>().ToList()
-                        .Find(a => a.TryCast<AudioSource>() != null)
-                        .Cast<AudioSource>(); im.Print("finding the listener");
-                    var audio = Extensions.LoadAudioFromCardPortraits("CardPortraits\\testSound");
-                    source.clip = audio;
-                    source.Play();
-                    //AddressableLoader.groups["GameModifierData"].list.ToArray().First().Cast<GameModifierData>().PlayRingSfx();
-                }
-            }
-            // End of ALT commands
 
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown("r"))
                 menu.GoToTown();
